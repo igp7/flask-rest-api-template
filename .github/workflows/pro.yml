@@ -1,0 +1,95 @@
+name: deploy heroku
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+
+  Tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:13.3
+        env:
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: db_test
+        ports:
+          - 5432:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install dependecies
+        uses: igp7/action-pipenv@v1.0.0
+        with:
+          command: install
+
+      - name: Unit Tests
+        uses: igp7/action-pipenv@v1.0.0
+        with:
+          command: run tests_unit
+        env:
+          DATABASE_TEST_URL: postgresql+psycopg2://root:password@postgres:5432/db_test
+
+      - name: Integration Tests
+        uses: igp7/action-pipenv@v1.0.0
+        with:
+          command: run tests_integration
+        env:
+          DATABASE_TEST_URL: postgresql+psycopg2://root:password@postgres:5432/db_test
+
+      - name: API Tests
+        uses: igp7/action-pipenv@v1.0.0
+        with:
+          command: run tests_api
+        env:
+          DATABASE_TEST_URL: postgresql+psycopg2://root:password@postgres:5432/db_test
+
+  Deploy_Heroku:
+    runs-on: ubuntu-latest
+    needs: Tests
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Create app
+        id: create_app
+        continue-on-error: True
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: heroku create -a ${{ secrets.HEROKU_APP_NAME }}
+
+      - name: Create postgresql
+        id: create_postgresql
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        if: steps.create_app.outcome=='success'
+        run: heroku addons:create heroku-postgresql:hobby-dev -a ${{ secrets.HEROKU_APP_NAME }}
+
+      - name: Set ENV
+        id: set_env
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        if: steps.create_postgresql.outcome=='success'
+        run: heroku config:set APP_ENV=production API_ENTRYPOINT=entrypoint:app APP_SETTINGS_MODULE=config.ProductionConfig API_HOST=0.0.0.0 PLATFORM_DEPLOY=heroku -a ${{ secrets.HEROKU_APP_NAME }}
+
+      - name: Login to Heroku Container registry
+        if: always()
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: heroku container:login
+
+      - name: Build and push
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: heroku container:push -a ${{ secrets.HEROKU_APP_NAME }} web
+
+      - name: Release
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: heroku container:release -a ${{ secrets.HEROKU_APP_NAME }} web

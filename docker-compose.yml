@@ -1,0 +1,56 @@
+version: '3'
+
+services:
+  api:
+    container_name: api
+    image: api
+    build: .
+    env_file:
+      - .env.api.local
+    #ports:
+    #  - 5000:5000
+    depends_on:
+      - db
+
+  db:
+    container_name: db
+    image: postgres:13.3
+    env_file:
+      - .env.db.local
+    ports:
+      - 8001:5432
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data/
+      - ./services/database/conf-init:/docker-entrypoint-initdb.d
+
+  docs:
+    container_name: docs
+    image: docs
+    build: ./services/docs
+    #ports:
+    #  - 9000:8080
+
+  nginx:
+    container_name: nginx
+    image: nginx
+    build: ./services/server
+    ports:
+      - 8080:80
+    depends_on:
+      - api
+
+  cron:
+    container_name: cron
+    image: cron
+    build: ./services/cron
+    env_file:
+      - .env.cron.local
+    volumes:
+      - ./services/cron/cron_tasks/daily:/etc/periodic/daily/:ro
+      - ./services/database/backups:/var/backups/postgres
+      - ./services/cron/logs:/var/log/
+    depends_on:
+      - db
+
+volumes:
+  postgresql_data:

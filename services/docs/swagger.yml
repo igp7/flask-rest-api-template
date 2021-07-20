@@ -1,0 +1,400 @@
+openapi: 3.0.0
+servers:
+  - url: http://0.0.0.0:5000
+    description: Development server
+  - url: http://0.0.0.0:8080
+    description: Local server
+info:
+  description: |
+    Esto es una plantilla para la creacion una openapi con version 3.0.0. Describe la funcinalidad basica de gestion de usuarios y autenticacion en una API Rest.
+  version: "1.0.0"
+  title: Flask API Rest Template
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: 41735994+igp7@users.noreply.github.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+tags:
+- name: Users
+  description: Operaciones sobre users
+- name: Auth
+  description: Login, Logout y Refresh
+paths:
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Obtener todos los usuarios.
+      description: Solo un usuario con rol de admin puede obtener los todos los usuarios.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Get de usuarios con exito.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseAllUsers'
+        '400':
+          description: Error en el schema de user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Access token perdido o no valido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags:
+        - Users
+      summary: Crear nuevo usuario.
+      description: Todos puede crear un usuario nuevo.
+      requestBody:
+        description: Necesario name y password para crear nuevo usuario.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserBody'
+      responses:
+        '201':
+          description: Usuario creado con exito.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseAllUsers'
+        '400':
+          description: Error en el schema de user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '409':
+          description: name de usuario no disponible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /users/{public_id}:
+    get:
+      tags:
+        - Users
+      summary: Obtener un usuario.
+      description: Solo puede acceder el usuario con public_id.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: public_id
+          in: path
+          description: ID unico de usuario.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Get detalles de usuario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Access token perdido o no valido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: No existe el usuario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '403':
+          description: No tiene acceso al usuario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    put:
+      tags:
+        - Users
+      summary: Actualizar un usuario.
+      description: Actualizar nombre o contraseña de un usuario.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: public_id
+          in: path
+          description: ID unico de usuario.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: name o password para actualizar un usuario.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserBody'
+      responses:
+        '201':
+          description: Usuario actualizado con exito.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseUsers'
+        '400':
+          description: Error con esquema de usuario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+            description: Access token perdido o no valido.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: No existe el usuario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '409':
+          description: name de usuario no disponible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    delete:
+      tags:
+        - Users
+      summary: Eliminar un usuario.
+      description: Elimina un usuario basado en el public_id.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: public_id
+          in: path
+          description: ID unico de usuario para buscar
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Usuario eliminado con exito.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseUsers'
+        '400':
+          description: Error en el schema de user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Access token perdido o no valido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: No existe el usuario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login user.
+      description: Login de un usuario.
+      requestBody:
+        description: name y password para logearse.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserBody'
+      responses:
+        '200':
+          description: Usuario creado con exito.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Error en la contraseña o schema de user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Access token perdido o no valido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: No existe el usuario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /auth/logout:
+    delete:
+      tags:
+        - Auth
+      summary: Logout user.
+      description: Logout de un usuario.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Usuario logout con exito.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Access token perdido o no valido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /auth/refresh:
+    get:
+      tags:
+        - Auth
+      summary: Refresh token.
+      description: Refresh token.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Refresh con exito.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseRefreshToken'
+        '401':
+          description: Access token perdido o no valido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        public_id:
+          type: string
+        name:
+          type: string
+        password:
+          type: string
+        admin:
+          type: boolean
+    Users:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        public_id:
+          type: string
+        name:
+          type: string
+        password:
+          type: string
+        admin:
+          type: boolean
+        tokens:
+          type: array
+          items:
+            $ref: '#/components/schemas/BlacklistToken'
+    UserArray:
+      type: array
+      items:
+        $ref: '#/components/schemas/Users'
+    BlacklistToken:
+      type: object
+      properties:
+        token_id:
+          type: integer
+          format: int64
+        jti:
+          type: string
+        token_type:
+          type: string
+        user_identity:
+          type: string
+        expires:
+          type: string
+          format: date-time
+    UserBody:
+      type: object
+      properties:
+        name:
+          type: string
+        password:
+          type: string
+    RefreshToken:
+      type: object
+      properties:
+        access_token:
+          type: string
+    ApiResponseUsers:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        msg:
+          type: string
+        data:
+          $ref: '#/components/schemas/User'
+    ApiResponseAllUsers:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        msg:
+          type: string
+        data:
+          $ref: '#/components/schemas/UserArray'
+    ApiResponseRefreshToken:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        msg:
+          type: string
+        data:
+          $ref: '#/components/schemas/RefreshToken'
+    ApiResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        msg:
+          type: string
