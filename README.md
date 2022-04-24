@@ -26,6 +26,8 @@ plataforma heroku, mediante el workflow [pro.yml](./.github/workflows/pro.yml) s
    - [CI (Continuous Integration)](#ci-continuous-integration)
    - [CD (Continuous deployment)](#cd-continuous-deployment)
 - [Ejemplo de expansion de este template](#ejemplo-de-expansion-de-este-template)
+- [Aviso de descargo de responsabilidad](#aviso-de-descargo-de-responsabilidad)
+- [Contribución](#contribución)
 
 ## Tecnología
 - **Web Framework:** Flask
@@ -429,7 +431,9 @@ Necesitas añadir *items* que permita a los usuarios hacer CRUD en sus artículo
 7. Añadir los endpoints en [README](#endpoints)
 
 ## Aviso de descargo de responsabilidad
-No asumo ninguna responsabilidad por cualquier pérdida o error ocasionado por este software. El uso de este software queda bajo tu unica responsabilidad.
+En ningún caso me hago responsable por daños y perjuicios, incluidos, entre otros, daños y perjuicios indirectos o de carácter secundario, o daños y perjuicios por pérdidas o beneficios derivados de, o relacionados con, la utilización de este software.
+
+Tú, como usuario, actúas por tu cuenta y riesgo si decides utilizar este software.
 
 ## Contribución
-Siéntete libre de realizar cualquier sugerencia o mejora al proyecto mediante un pull request.
+Siéntete libre de realizar cualquier sugerencia o mejora al proyecto.
